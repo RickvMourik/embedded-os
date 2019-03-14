@@ -46,55 +46,48 @@ void ls(){
 }
 
 void find(){
-	string name = "";
-	string text = "";
-	cout << "Enter filename: ";
-	cin >> name;
-	cout << "Enter string: ";
-	cin >> text;
-	int fd[2];
-	pipe(fd);
-	int pid = fork();
-	if(pid == 0) {
-		dup2(fd[1], STDOUT_FILENO);
-		close(fd[1]);
-	    	execlp("find", "find", name.c_str(), NULL);
-	} else {
-		int pid = fork();
-		if (pid == 0){
-			dup2(fd[0], STDIN_FILENO);
-			close(fd[0]);
-			execl("/bin/sh", "grep", text, name, NULL); //cant open ????
-		} else {
-			close(fd[1]);
-			close(fd[0]);
-			int waitnr = 2;
-			wait(&waitnr);
-		}
-	}
+  int pid;
+  int pip[2]; 
+  int status;
+  std::string str_search;
+
+  std::cout << "Search: "; 
+  std::getline(std::cin, str_search);
+  const char * search = str_search.c_str();
+
+  pipe(pip);
+  pid = fork();
+
+  if (pid == 0) {
+    dup2(pip[1], 1);
+    close(pip[0]);
+    close(pip[1]);
+    execlp("find", "find", ".", NULL);
+  }
+  else {
+    wait(NULL);
+  }
+  pid = fork();
+  if (pid == 0) {
+    dup2(pip[0], 0);
+    close(pip[0]);
+    close(pip[1]);
+    execlp("grep", "grep", search, NULL);
+  }
+  close(pip[0]);
+  close(pip[1]);
+  wait(NULL);
 }
 
-void python(string command){
-	
-}
 
-void command_run(){
-	string command = "";
-	cin >> command;
-	if(command == "new_file"){
-		new_file();
-	} else if(command == "ls"){
-		ls();
-	} else if(command == "find"){
-		find();
-	} else if(command == "python"){
-		string pythoncommand = "";
-		cout << "Enter python command: ";
-		getline(cin, pythoncommand);
-		python(pythoncommand);
-	}
-}
 
-int main(){
-	command_run();
+
+void python(){
+  pid_t pid = fork();
+  int status;
+  if (pid == 0){
+    execlp("python", "python", NULL);
+  }else{
+    wait(NULL);
+  }
 }
